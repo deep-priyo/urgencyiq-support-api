@@ -109,12 +109,88 @@ def _calculate_keyword_score(message: str) -> float:
     """Calculate score based on keywords and patterns."""
     # Keyword categories and their base scores
     KEYWORDS = {
-        5: ['rejected', 'denied', 'blocked', 'cant access', 'fraud', 'unauthorized', 'stolen', 'emergency', 'urgent',
-            'immediately', "hacked"],
-        4: ['loan approval', 'disbursed', 'when will', 'not received', 'waiting', 'crb', 'credit report', 'clearance',
-            'batch number'],
-        3: ['late payment', 'overdue', 'pay on', 'will pay', 'promise', 'delayed salary', 'tomorrow', 'next week'],
-        2: ['how to', 'update', 'change', 'information', 'question', 'query', 'thank', 'appreciate']
+        # 🔴 CRITICAL – immediate risk / blocking / abuse / fraud
+        5: [
+            # Access / blocking
+            "can't access", "cant access", "cannot access", "can't login", "cant login",
+            "unable to access", "blocked", "account blocked", "dead-end",
+
+            # Fraud / identity misuse
+            "fraud", "unauthorized", "stolen", "hacked",
+            "someone used my id", "used my id", "identity misuse",
+
+            # Harassment / extreme distress
+            "abuse", "abusing", "punish me", "punish me forever",
+            "desperately need", "urgent cash", "emergency", "accident",
+
+            # Financial lock
+            "can't be", "it can't be"
+        ],
+
+        # 🟠 HIGH – loan / CRB / rejection / disbursement
+        4: [
+            # Rejection / suspension
+            "rejected", "denied", "application rejected", "loan rejected",
+            "reapply", "another 7 days", "7 days", "7more days", "penalty",
+
+            # Disbursement issues
+            "loan approval", "approved", "disbursed", "not received",
+            "have not received", "when will", "waiting", "haven't received",
+
+            # Credit bureau
+            "crb", "credit report", "clearance", "certificate of clearance",
+            "trans union",
+
+            # Batch number
+            "batch number", "clearance batch",
+
+            # System inconsistency
+            "system says", "update your systems", "wrong balance"
+        ],
+
+        # 🟡 MEDIUM – payment difficulty / timing / negotiation
+        3: [
+            # Payment promises
+            "will pay", "i will pay", "pay on", "pay by",
+            "promise", "promise to pay",
+
+            # Delays
+            "late payment", "overdue", "delay", "delayed salary",
+            "not been paid", "salary delayed",
+
+            # Requests for time
+            "bear with me", "request more time", "allow me to pay",
+            "amicable plan",
+
+            # Partial payments
+            "paid earlier", "paid part", "reduce my loan",
+            "tomorrow", "next week", "within a week", "72hrs", "72 hours"
+        ],
+
+        # 🟢 LOW – information / clarification / account details
+        2: [
+            # How-to / info
+            "how to", "how do i", "how can i",
+            "kindly advise", "please advise",
+
+            # Account / phone / sms
+            "update", "change", "information",
+            "number changed", "validate", "sms", "mpesa sms",
+
+            # Feature requests
+            "payment options", "weekly", "monthly",
+            "adjust your payment",
+
+            # Mild confusion
+            "question", "query", "clarify", "don't understand"
+        ],
+
+        # ⚪ MINIMAL – closure / gratitude
+        1: [
+            "thank", "thanks", "thank you", "appreciate",
+            "god bless", "ok", "okay", "alright",
+            "have cleared my loan", "cleared my loan"
+        ]
     }
 
     # Patterns that add to score
