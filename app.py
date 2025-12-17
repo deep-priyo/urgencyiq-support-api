@@ -185,7 +185,8 @@ def seed_database():
 
 if __name__ == "__main__":
     with app.app_context():
+        print("Creating database tables if not present...")
         db.create_all()
-        print("Tables created successfully")
+        print("Database ready")
 
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
