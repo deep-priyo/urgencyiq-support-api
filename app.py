@@ -5,6 +5,7 @@ from datetime import datetime
 from flask_cors import CORS
 from sqlalchemy import desc
 
+from seed_data import seed_from_csv
 from uregency_analyzer import get_urgency_score
 from models import Customer, Message, AgentReply
 from db import db
@@ -13,10 +14,19 @@ app = Flask(__name__)
 CORS(app)
 
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(BASE_DIR, "instance", "app.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+if DATABASE_URL:
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+else:
+    # Local development fallback
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    DB_PATH = os.path.join(BASE_DIR, "instance", "app.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
@@ -151,6 +161,23 @@ def get_messages():
         })
 
     return jsonify(response)
+
+
+@app.route("/admin/seed", methods=["POST"])
+def seed_database():
+    try:
+        result = seed_from_csv()
+        return jsonify({
+            "success": True,
+            "seeded": result
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 
 if __name__ == "__main__":
     with app.app_context():
