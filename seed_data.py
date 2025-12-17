@@ -1,21 +1,16 @@
 import csv
 from datetime import datetime
 
-from app import app
 from db import db
 from models import Customer, Message
 from uregency_analyzer import get_urgency_score
-
 
 CSV_PATH = "data/GeneralistRails_Project_MessageData.csv"
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-with app.app_context():
+def seed_from_csv():
     print("Starting database seeding")
-
-    db.create_all()
-    print("Database tables ensured")
 
     total_rows = 0
     inserted_messages = 0
@@ -40,7 +35,7 @@ with app.app_context():
                 created_customers += 1
 
             # ---- Urgency scoring ----
-            urgency_score = get_urgency_score(message_body, use_llm=True)
+            urgency_score = get_urgency_score(message_body, use_llm=False)
 
             # ---- Message ----
             message = Message(
@@ -57,12 +52,16 @@ with app.app_context():
             # ---- Progress log ----
             if idx % 10 == 0 or idx == total_rows:
                 print(
-                    f"Processed {idx}/{total_rows} rows | "
-                    f"Messages inserted: {inserted_messages} | "
-                    f"Customers created: {created_customers}"
+                    f"Processed {idx}/{total_rows} | "
+                    f"Messages: {inserted_messages} | "
+                    f"Customers: {created_customers}"
                 )
 
-        print("Committing changes to database")
-        db.session.commit()
-
+    db.session.commit()
     print("Seeding completed successfully")
+
+    return {
+        "rows": total_rows,
+        "messages": inserted_messages,
+        "customers": created_customers,
+    }
