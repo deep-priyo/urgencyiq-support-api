@@ -162,6 +162,10 @@ def get_messages():
 
     return jsonify(response)
 
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "ok"})
+
 
 @app.route("/admin/seed", methods=["POST"])
 def seed_database():
