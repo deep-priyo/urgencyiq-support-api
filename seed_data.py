@@ -35,7 +35,7 @@ def seed_from_csv():
                 created_customers += 1
 
             # ---- Urgency scoring ----
-            urgency_score = get_urgency_score(message_body, use_llm=False)
+            urgency_score = get_urgency_score(message_body, use_llm=True)
 
             # ---- Message ----
             message = Message(
