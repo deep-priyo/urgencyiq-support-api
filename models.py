@@ -5,6 +5,7 @@ class Customer(db.Model):
     __tablename__ = "customers"
 
     id = db.Column(db.Integer, primary_key=True)
+    messages = db.relationship("Message", backref="customer", lazy=True)
 
 
 class Message(db.Model):
@@ -13,12 +14,13 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=False)
     message_body = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)  # Fixed with default
     urgency_score = db.Column(db.Float)
     status = db.Column(db.String(20), default="open")
+    assigned_to = db.Column(db.String(100))  # NEW: Track assigned agent
+    assigned_at = db.Column(db.DateTime)     # NEW: Track when assigned
 
     replies = db.relationship("AgentReply", backref="message", lazy=True)
-
 
 
 class AgentReply(db.Model):
