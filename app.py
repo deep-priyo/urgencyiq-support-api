@@ -27,7 +27,7 @@ else:
     # Create instance directory if it doesn't exist
     os.makedirs(DB_DIR, exist_ok=True)
 
-    DB_PATH = os.path.join(DB_DIR, "app.db")
+    DB_PATH = os.path.join(DB_DIR, "app2.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
 
 
@@ -154,6 +154,8 @@ def get_messages():
             "timestamp": m.timestamp.isoformat(),
             "urgency": m.urgency_score,
             "status": m.status,
+            "assigned_to": m.assigned_to,  # NEW
+            "assigned_at": m.assigned_at.isoformat() if m.assigned_at else None,  # NEW
             "replies": [
                 {
                     "agent_name": r.agent_name,
@@ -185,6 +187,68 @@ def seed_database():
             "success": False,
             "error": str(e)
         }), 500
+
+
+@app.route("/api/customers/<int:customer_id>", methods=["GET"])
+def get_customer_info(customer_id):
+    customer = db.session.get(Customer, customer_id)
+
+    if not customer:
+        return jsonify({"error": "Customer not found"}), 404
+
+    # Get customer's message history
+    messages = Message.query.filter_by(customer_id=customer_id).all()
+
+    return jsonify({
+        "id": customer.id,
+        "total_messages": len(messages),
+        "open_messages": sum(1 for m in messages if m.status == "open"),
+        "resolved_messages": sum(1 for m in messages if m.status == "resolved"),
+        "avg_urgency": sum(m.urgency_score for m in messages) / len(messages) if messages else 0,
+        "first_contact": min(m.timestamp for m in messages).isoformat() if messages else None,
+        "last_contact": max(m.timestamp for m in messages).isoformat() if messages else None,
+    })
+
+
+@app.route("/api/messages/<int:message_id>/assign", methods=["POST"])
+def assign_message(message_id):
+    """Assign a message to an agent"""
+    data = request.get_json() if request.is_json else request.form
+    agent_name = data.get("agent_name")
+
+    if not agent_name:
+        return jsonify({"error": "agent_name is required"}), 400
+
+    message = db.session.get(Message, message_id)
+
+    if not message:
+        return jsonify({"error": "Message not found"}), 404
+
+    # Assign the message
+    message.assigned_to = agent_name.strip()
+    message.assigned_at = datetime.utcnow()
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "assigned_to": message.assigned_to,
+        "assigned_at": message.assigned_at.isoformat()
+    })
+
+
+@app.route("/api/messages/<int:message_id>/unassign", methods=["POST"])
+def unassign_message(message_id):
+    """Unassign a message from an agent"""
+    message = db.session.get(Message, message_id)
+
+    if not message:
+        return jsonify({"error": "Message not found"}), 404
+
+    message.assigned_to = None
+    message.assigned_at = None
+    db.session.commit()
+
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":
