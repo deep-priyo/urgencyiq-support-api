@@ -6,7 +6,7 @@ from flask_cors import CORS
 from sqlalchemy import desc
 
 from seed_data import seed_from_csv
-from uregency_analyzer import get_urgency_score
+from urgency_analyzer import get_urgency_score
 from models import Customer, Message, AgentReply
 from db import db
 
