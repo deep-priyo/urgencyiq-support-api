@@ -13,7 +13,6 @@ from db import db
 app = Flask(__name__)
 CORS(app)
 
-
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -23,7 +22,12 @@ if DATABASE_URL:
 else:
     # Local development fallback
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    DB_PATH = os.path.join(BASE_DIR, "instance", "app.db")
+    DB_DIR = os.path.join(BASE_DIR, "instance")
+
+    # Create instance directory if it doesn't exist
+    os.makedirs(DB_DIR, exist_ok=True)
+
+    DB_PATH = os.path.join(DB_DIR, "app.db")
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
 
 
