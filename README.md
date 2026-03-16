@@ -1,6 +1,6 @@
-# Branch Support Dashboard - Backend
+# UrgencyIQ Support API — Backend
 
-A Flask-based REST API for managing customer support messages with intelligent urgency scoring powered by OpenAI GPT-4.
+A production-ready Flask REST API that turns raw customer messages into prioritized support tickets using hybrid AI urgency scoring (OpenAI + smart keyword heuristics).
 
 ## ⚠️ Important Configuration Notes
 
@@ -86,7 +86,7 @@ backend/
 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd support-dashboard-backend
+cd urgencyiq-support-api
 ```
 
 2. Create virtual environment
@@ -312,12 +312,12 @@ Response: 200 OK
 ### Scoring Algorithm
 
 **With OpenAI API Key:**
-```python
-final_score = (0.6 × LLM_score) + (0.4 × keyword_score)
+```text
+final_score = (0.6 * llm_score) + (0.4 * keyword_score)
 ```
 
 **Without OpenAI API Key:**
-```python
+```text
 final_score = keyword_score  # Falls back to keyword-only
 ```
 
@@ -361,7 +361,7 @@ The `render.yaml` file provides one-click deployment:
 ```yaml
 services:
   - type: web
-    name: branch-support-api
+    name: urgencyiq-support-api
     env: python
     buildCommand: pip install -r requirements.txt && python init_db.py
     startCommand: gunicorn app:app
@@ -378,7 +378,7 @@ services:
 
 **Heroku:**
 ```bash
-heroku create branch-support-api
+heroku create urgencyiq-support-api
 heroku addons:create heroku-postgresql:mini
 heroku config:set OPENAI_API_KEY=sk-your-key
 git push heroku main
@@ -450,24 +450,23 @@ curl http://localhost:5000/api/health
 
 ## Security Notes
 
-- No authentication implemented (as per assignment requirements)
+- No authentication implemented (kept minimal for demo purposes)
 - Agent names are used for identification only
 - CORS is wide open - restrict in production
 - API keys should never be committed to version control
 - Use environment variables for all sensitive configuration
 
-## Assignment Requirements Coverage
+## Feature Highlights
 
-✅ **REST API Endpoints**: Complete CRUD operations for messages and replies  
-✅ **Database Integration**: SQLAlchemy ORM with PostgreSQL/SQLite support  
-✅ **CSV Data Seeding**: Automated import from provided customer messages  
-✅ **Urgency Detection**: Hybrid keyword + LLM scoring system  
-✅ **Search Functionality**: Query parameters for filtering and text search  
-✅ **Customer Context**: Dedicated endpoint for customer profile data  
-✅ **Multi-Agent Support**: Assignment tracking and status management  
-✅ **Real-Time Ready**: Polling-friendly architecture with timestamp tracking
+✅ RESTful endpoints for messages, replies, and customer profiles  
+✅ Hybrid urgency detection: keyword heuristics + LLM scoring  
+✅ Search, sort, and filter across urgency, time, and text  
+✅ CSV seeding for instant realistic datasets  
+✅ Multi-agent assignment and resolution workflow  
+✅ Production-friendly config: PostgreSQL/SQLite auto-detect, Gunicorn ready  
+✅ Easy deploy on Render/Heroku/Railway
 
 ---
 
-**Developed for Branch's Software Engineer Intern Assignment**  
-**December 2025**
+— Built as a personal project to showcase full-stack backend design  
+Last updated: March 2026
