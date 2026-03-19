@@ -15,10 +15,11 @@ CORS(app)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+#if im in a production environment then...
 if DATABASE_URL:
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL # flask is not connected to postgres
 else:
     # Local development fallback
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -34,6 +35,13 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
+
+#  forces models to register BEFORE creating tables
+import models
+
+with app.app_context():
+    print("Creating tables safely...")
+    db.create_all()
 
 @app.route("/api/messages/send", methods=["POST"])
 def create_message():
@@ -82,44 +90,6 @@ def create_message():
         "message_id": message.id,
         "urgency": urgency
     }), 201
-
-@app.route("/api/messages/<int:message_id>/reply", methods=["POST"])
-def reply_to_message(message_id):
-    if request.is_json:
-        data = request.get_json()
-        agent_name = data.get("agent_name")
-        reply_text = data.get("reply")
-    else:
-        agent_name = request.form.get("agent_name")
-        reply_text = request.form.get("reply")
-
-    if not agent_name or not reply_text:
-        return jsonify({
-            "error": "agent_name and reply are required"
-        }), 400
-
-    reply = AgentReply(
-        message_id=message_id,
-        agent_name=agent_name.strip(),
-        reply_text=reply_text.strip()
-    )
-
-    db.session.add(reply)
-    db.session.commit()
-
-    return jsonify({"success": True}), 201
-
-@app.route("/api/messages/<int:message_id>/resolve", methods=["POST"])
-def resolve_message(message_id):
-    message = db.session.get(Message, message_id)
-
-    if not message:
-        return jsonify({"error": "Message not found"}), 404
-
-    message.status = "resolved"
-    db.session.commit()
-
-    return jsonify({"success": True})
 @app.route("/api/messages", methods=["GET"])
 def get_messages():
     sort = request.args.get("sort", "urgency")
@@ -167,6 +137,44 @@ def get_messages():
         })
 
     return jsonify(response)
+
+@app.route("/api/messages/<int:message_id>/reply", methods=["POST"])
+def reply_to_message(message_id):
+    if request.is_json:
+        data = request.get_json()
+        agent_name = data.get("agent_name")
+        reply_text = data.get("reply")
+    else:
+        agent_name = request.form.get("agent_name")
+        reply_text = request.form.get("reply")
+
+    if not agent_name or not reply_text:
+        return jsonify({
+            "error": "agent_name and reply are required"
+        }), 400
+
+    reply = AgentReply(
+        message_id=message_id,
+        agent_name=agent_name.strip(),
+        reply_text=reply_text.strip()
+    )
+
+    db.session.add(reply)
+    db.session.commit()
+
+    return jsonify({"success": True}), 201
+
+@app.route("/api/messages/<int:message_id>/resolve", methods=["POST"])
+def resolve_message(message_id):
+    message = db.session.get(Message, message_id)
+
+    if not message:
+        return jsonify({"error": "Message not found"}), 404
+
+    message.status = "resolved"
+    db.session.commit()
+
+    return jsonify({"success": True})
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
