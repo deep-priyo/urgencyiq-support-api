@@ -6,7 +6,8 @@ from flask_cors import CORS
 from sqlalchemy import desc
 
 from seed_data import seed_from_csv
-from urgency_analyzer import get_urgency_score
+from urgency_analyzer_gemini import get_urgency_score
+# from urgency_analyzer_openai import get_urgency_score
 from models import Customer, Message, AgentReply
 from db import db
 
@@ -43,6 +44,17 @@ with app.app_context():
     print("Creating tables safely...")
     db.create_all()
 
+@app.route("/api/set/llm", methods=["POST"])
+def set_llm():
+    data = request.get_json()
+    app.config["USE_LLM"] = data.get("use_llm", False)
+    return jsonify({"success": True})
+
+@app.route("/api/get/llm", methods=["GET"])
+def get_llm():
+    return jsonify({"use_llm": app.config["USE_LLM"]})
+
+
 @app.route("/api/messages/send", methods=["POST"])
 def create_message():
     # ---------- READ INPUT (JSON or FORM) ----------
@@ -70,8 +82,10 @@ def create_message():
         db.session.add(customer)
 
     # ---------- URGENCY ----------
-    urgency = get_urgency_score(message_text, use_llm=True)
-
+    urgency = get_urgency_score(
+        message_text,
+        use_llm=app.config["USE_LLM"]
+    )
     # ---------- MESSAGE ----------
     message = Message(
         customer_id=user_id,
