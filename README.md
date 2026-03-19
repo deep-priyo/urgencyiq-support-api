@@ -424,7 +424,7 @@ Common HTTP status codes:
 ### Running Tests
 ```bash
 # Test urgency analyzer
-python urgency_analyzer.py
+python urgency_analyzer_openai.py
 ```
 
 ### Database Migrations
