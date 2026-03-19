@@ -8,6 +8,8 @@ A production-ready Flask REST API that turns raw customer messages into prioriti
 
 2. **Database Auto-Fallback**: Without a PostgreSQL connection string, the application automatically creates a local SQLite database in `instance/app2.db`. This is ideal for local development.
 
+3. **Runtime LLM Toggle (no code changes required)**: You can enable/disable the use of the LLM at runtime via API/Frontend using the new endpoints `POST /api/set/llm` and `GET /api/get/llm`. Previously this was hardcoded; now it’s configurable without redeploying.
+
 ## Overview
 
 This backend provides REST endpoints for:
@@ -22,6 +24,8 @@ The urgency analyzer uses a hybrid approach:
 - **Keyword-based scoring** (40%): Pattern matching for critical terms like "blocked", "fraud", "rejected"
 - **LLM scoring** (60%): GPT-4 Mini contextual analysis for nuanced urgency detection
 - **Fallback strategy**: Uses keyword-only scoring if OpenAI API is unavailable
+
+You can turn LLM scoring on/off at runtime (see "LLM Toggle" in API Endpoints below). When LLM is off, the system uses keyword-only scoring regardless of whether an API key is present.
 
 ## Tech Stack
 
@@ -299,6 +303,38 @@ Response: 200 OK
   }
 }
 ```
+
+#### LLM Toggle (Enable/Disable LLM scoring at runtime)
+
+Use these endpoints to control whether the urgency scoring calls the LLM. This is useful for environments without API keys, for cost control, or quick feature toggling from the frontend.
+
+```http
+GET /api/get/llm
+
+Response: 200 OK
+{
+  "use_llm": true
+}
+```
+
+```http
+POST /api/set/llm
+Content-Type: application/json
+
+{
+  "use_llm": false
+}
+
+Response: 200 OK
+{
+  "success": true
+}
+```
+
+Notes:
+- The setting is held in server memory (`app.config["USE_LLM"]`). Restarting the server resets it to the default defined by the app (currently `False` unless set after start).
+- If LLM is enabled but no valid API key is configured, the system will still fall back to keyword-only scoring.
+- Frontend apps can call these endpoints to surface a toggle switch without code changes.
 
 ## Urgency Scoring System
 
