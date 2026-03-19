@@ -3,7 +3,8 @@ from datetime import datetime
 
 from db import db
 from models import Customer, Message
-from urgency_analyzer import get_urgency_score
+# from urgency_analyzer_openai import get_urgency_score
+from urgency_analyzer_gemini import get_urgency_score
 
 CSV_PATH = "data/GeneralistRails_Project_MessageData.csv"
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
